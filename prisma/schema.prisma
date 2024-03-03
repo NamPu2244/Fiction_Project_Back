@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int          @id @default(autoincrement())
+  name      String
+  username  String       @unique
+  password  String
+  email     String       @unique
+  role      Role         @default(MEMBER)
+  coin      Int          @default(100)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  works     Work[]
+  donated   UserDonate[]
+
+  @@map("users")
+}
+
+model Work {
+  id         Int         @id @default(autoincrement())
+  userId     Int
+  user       User        @relation(fields: [userId], references: [id])
+  title      String
+  picture    String
+  tagline    String      @db.Text
+  type       Type
+  category   Category
+  intro      String      @db.Text
+  status     Status      @default(hidden)
+  characters Character[]
+  espisodes  Espisode[]
+
+  @@map("works")
+}
+
+model Character {
+  id      Int          @id @default(autoincrement())
+  picture String
+  name    String
+  roleAs  RoleAs
+  work    Work         @relation(fields: [workId], references: [id])
+  workId  Int
+  donated UserDonate[]
+
+  @@map("characters")
+}
+
+model UserDonate {
+  id          Int       @id @default(autoincrement())
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int
+  character   Character @relation(fields: [characterId], references: [id])
+  characterId Int
+  coin        Int
+
+  @@map("userDonates")
+}
+
+model Espisode {
+  id          Int               @id @default(autoincrement())
+  title       String
+  contentText String?           @db.Text
+  work        Work              @relation(fields: [workId], references: [id])
+  workId      Int
+  status      Status            @default(hidden)
+  pictures    EspisodePicture[]
+
+  @@map("espisodes")
+}
+
+model EspisodePicture {
+  id         Int      @id @unique @default(autoincrement())
+  picture    String
+  espisode   Espisode @relation(fields: [espisodeId], references: [id])
+  espisodeId Int
+
+  @@map("espisodePictures")
+}
+
+enum Status {
+  public
+  hidden
+}
+
+enum Category {
+  Love
+  Comedy
+  Horror
+  Secret
+}
+
+enum Type {
+  FICTION
+  CARTOON
+}
+
+enum Role {
+  MEMBER
+  CREATOR
+  ADMIN
+}
+
+enum RoleAs {
+  Hero //พระเอก
+  Heroine //นางเอก
+  Villain //ตัวร้าย
+  Main //ตัวหลัก
+}
